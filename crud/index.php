@@ -100,14 +100,14 @@ class NotesManager
             </tr>';
     echo '</thead>';
     echo '<tbody>';
-    echo '<tr id="noDataFoundRow" style="display: none">
-    <td colspan="4">No data found</td>
-  </tr>';
+  //   echo '<tr id="noDataFoundRow" style="display: none">
+  //   <td colspan="4">No data found</td>
+  // </tr>';
 
     while ($row = mysqli_fetch_assoc($result)) {
       $sno = $sno + 1;
       echo "<tr>
-                <th scope='row'>" . $sno . "</th>
+                <th scope='row' class='sno-column'>" . $sno . "</th>
                 <td>" . $row['title'] . "</td>
                 <td>" . $row['description'] . "</td>
                 <td> <button class='edit btn btn-sm btn-primary' id=" . $row['sno'] . ">Edit</button> <button class='delete btn btn-sm btn-danger' id=d" . $row['sno'] . ">Delete</button></td>
@@ -150,7 +150,7 @@ class NotesManager
             </div>
             <div class="form-group">
               <label for="description" class="form-label">Description</label>
-              <textarea class="form-control" placeholder="Add your Notes here" id="descriptionEdit" name="descriptionEdit" row="3"></textarea>
+              <textarea class="form-control" placeholder="Add your Note description" id="descriptionEdit" name="descriptionEdit" row="3"></textarea>
             </div>
             <button type="submit" class="btn btn-primary my-2">Update</button>
           </form>
@@ -165,7 +165,7 @@ class NotesManager
   $notesManager->handlePostRequest();
   ?>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark bg-opacity-75">
     <div class="container-fluid">
       <a class="navbar-brand" href="/CRUD/index.php">PHP CRUD</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -196,11 +196,11 @@ class NotesManager
     <form action="/CRUD/index.php" method="post">
       <div class="mb-3">
         <label for="title" class="form-label">Title</label>
-        <input type="text" class="form-control" id="title" name="title" aria-describedby="emailHelp">
+        <input type="text" class="form-control" placeholder="Note title" id="title" name="title" aria-describedby="emailHelp">
       </div>
       <div class="form-group">
         <label for="description" class="form-label">Description</label>
-        <textarea class="form-control" placeholder="Add your Notes here" id="description" name="description" row="3"></textarea>
+        <textarea class="form-control" placeholder="Note description" id="description" name="description" row="3"></textarea>
       </div>
       <button type="submit" class="btn btn-primary my-2">Add Note</button>
     </form>
@@ -219,10 +219,6 @@ class NotesManager
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-  <script src="//cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <!-- <script>
-    let table = new DataTable('#myTable');
-  </script> -->
   <script>
     edits = document.getElementsByClassName('edit');
     Array.from(edits).forEach((element) => {
@@ -265,7 +261,17 @@ class NotesManager
       // Loop through all table rows, and hide those that don't match the search query
       for (i = 0; i < tr.length; i++) {
         matchFound = false; // Reset matchFound for each row
-        for (var j = 0; j < 3; j++) { // Loop through the three columns (title, sno, description)
+        td = tr[i].getElementsByTagName("td");
+        var snoColumn = tr[i].getElementsByClassName("sno-column")[0]; // Find the S.No column
+
+        if (snoColumn) {
+          txtValue = snoColumn.textContent || snoColumn.innerText;
+
+          if (txtValue.trim() === filter) {
+            matchFound = true;
+          }
+        }
+        for (var j = 0; j < 4; j++) { // Loop through the three columns (title, sno, description)
           if (i === 0) {
             // Handle table header row
             th = tr[i].getElementsByTagName("th")[j];

@@ -1,22 +1,46 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "Thakur@301";
-$database = "notes";
+class Database
+{
+    private $servername = "localhost";
+    private $username = "root";
+    private $password = "Thakur@301";
+    private $database = "notes";
+    private $conn;
+
+    private function __construct()
+    {
+        $this->conn = new mysqli($this->servername, $this->username, $this->password, $this->database);
+        if ($this->conn->connect_error) {
+            die("Connection failed: " . $this->conn->connect_error);
+        }
+    }
+
+    public static function getInstance()
+    {
+        static $instance = null;
+        if ($instance === null) {
+            $instance = new self();
+        }
+        return $instance;
+    }
+
+    public function getConnection()
+    {
+        return $this->conn;
+    }
+}
+
+
 class NotesManager
 {
-  private $conn;
   private $insert = false;
   private $update = false;
   private $delete = false;
+  private $db;
 
-  public function __construct($servername, $username, $password, $database)
+  public function __construct(Database $db)
   {
-    $this->conn = new mysqli($servername, $username, $password, $database);
-
-    if ($this->conn->connect_error) {
-      die("Connection failed: " . $this->conn->connect_error);
-    }
+    $this->db = $db;
   }
 
   public function handleDeleteRequest()
@@ -25,7 +49,7 @@ class NotesManager
       $sno = $_GET['delete'];
       $this->delete = true;
       $sql = "DELETE FROM `notes` WHERE `sno` = $sno";
-      $result = mysqli_query($this->conn, $sql);
+      $result = mysqli_query($this->db->getConnection(), $sql);
     }
   }
 
@@ -38,7 +62,7 @@ class NotesManager
         $description = $_POST["descriptionEdit"];
 
         $sql = "UPDATE `notes` SET `title` = '$title', `description` = '$description' WHERE `sno` = $sno";
-        $result = mysqli_query($this->conn, $sql);
+        $result = mysqli_query($this->db->getConnection(), $sql);
 
         if ($result) {
           $this->update = true;
@@ -50,12 +74,12 @@ class NotesManager
         $description = $_POST["description"];
 
         $sql = "INSERT INTO `notes`(`title`,`description`) VALUES('$title','$description')";
-        $result = mysqli_query($this->conn, $sql);
+        $result = mysqli_query($this->db->getConnection(), $sql);
 
         if ($result) {
           $this->insert = true;
         } else {
-          echo "The record was not inserted because of these error -->" . mysqli_error($this->conn);
+          echo "The record was not inserted because of these error -->" . mysqli_error($this->db->getConnection());
         }
       }
     }
@@ -86,7 +110,7 @@ class NotesManager
   public function displayNotesTable()
   {
     $sql = "SELECT * FROM notes";
-    $result = mysqli_query($this->conn, $sql);
+    $result = mysqli_query($this->db->getConnection(), $sql);
     $sno = 0;
 
     echo '<div class="container my-4">';
@@ -100,9 +124,9 @@ class NotesManager
             </tr>';
     echo '</thead>';
     echo '<tbody>';
-  //   echo '<tr id="noDataFoundRow" style="display: none">
-  //   <td colspan="4">No data found</td>
-  // </tr>';
+    //   echo '<tr id="noDataFoundRow" style="display: none">
+    //   <td colspan="4">No data found</td>
+    // </tr>';
 
     while ($row = mysqli_fetch_assoc($result)) {
       $sno = $sno + 1;
@@ -160,7 +184,8 @@ class NotesManager
   </div>
 
   <?php
-  $notesManager = new NotesManager($servername, $username, $password, $database);
+  $database = Database::getInstance();
+  $notesManager = new NotesManager($database);
   $notesManager->handleDeleteRequest();
   $notesManager->handlePostRequest();
   ?>
@@ -257,10 +282,8 @@ class NotesManager
       document.getElementById("notesTable").style.display = "none";
 
       var matchFound = false;
-
-      // Loop through all table rows, and hide those that don't match the search query
       for (i = 0; i < tr.length; i++) {
-        matchFound = false; // Reset matchFound for each row
+        matchFound = false; 
         td = tr[i].getElementsByTagName("td");
         var snoColumn = tr[i].getElementsByClassName("sno-column")[0]; // Find the S.No column
 
@@ -273,7 +296,6 @@ class NotesManager
         }
         for (var j = 0; j < 4; j++) { // Loop through the three columns (title, sno, description)
           if (i === 0) {
-            // Handle table header row
             th = tr[i].getElementsByTagName("th")[j];
             if (th) {
               txtValue = th.textContent || th.innerText;
@@ -290,7 +312,6 @@ class NotesManager
           }
         }
         if (i === 0) {
-          // Always show the table header
           tr[i].style.display = "";
         } else if (matchFound) {
           tr[i].style.display = "";
@@ -304,11 +325,10 @@ class NotesManager
         document.getElementById("notesTable").style.display = "block";
       }
 
-      // Show "No data available" if no matches were found
+      // Hide table if no matches were found
       document.getElementById("noDataFoundRow").style.display = matchFound ? "none" : "table-row";
     }
   </script>
 </body>
-
 
 </html>
